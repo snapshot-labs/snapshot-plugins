@@ -3,7 +3,7 @@
     "config:base"
   ],
   "enabledManagers": ["npm"],
-  "rangeStrategy": "update-lockfile",
+  "rangeStrategy": "bump",
   "packageRules": [
     {
       "packagePatterns": ["*"],
