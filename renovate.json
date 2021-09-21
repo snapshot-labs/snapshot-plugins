@@ -3,11 +3,5 @@
     "config:base"
   ],
   "enabledManagers": ["npm"],
-  "pinVersions": false,
-  "packageRules": [
-    {
-      "matchPackagePatterns": ["^@snapshot-labs/"],
-      "enabled": true
-    }
-  ]
+  "pinVersions": false
 }
