@@ -4,6 +4,7 @@
   ],
   "enabledManagers": ["npm"],
   "pinVersions": false,
+  "rangeStrategy": "bump"
   "packageRules": [
     {
       "packagePatterns": ["*"],
