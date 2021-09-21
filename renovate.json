@@ -3,5 +3,6 @@
     "config:base"
   ],
   "enabledManagers": ["npm"],
-  "pinVersions": false
+  "pinVersions": false,
+  "separateMinorPatch": true
 }
