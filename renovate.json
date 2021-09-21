@@ -2,5 +2,13 @@
   "extends": [
     "config:base"
   ],
-  "enabledManagers": ["npm"]
+  "enabledManagers": ["npm"],
+  "pinVersions": false,
+  "packageRules": [
+    {
+      "packagePatterns": ["*"],
+      "excludePackagePatterns": ["@snapshot-labs/snapshot.js"],
+      "enabled": false
+    }
+  ]
 }
