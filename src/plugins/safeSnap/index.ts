@@ -414,6 +414,7 @@ export default class Plugin {
   ) {
     const contract = new Contract(oracleAddress, OracleAbi, web3);
     const provider: StaticJsonRpcProvider = getProvider(network);
+    const account = (await web3.listAccounts())[0];
 
     const [
       [userBalance],
@@ -421,7 +422,7 @@ export default class Plugin {
       [historyHash],
       [isFinalized]
     ] = await multicall(network, provider, OracleAbi, [
-      [oracleAddress, 'balanceOf', [web3.provider.selectedAddress]],
+      [oracleAddress, 'balanceOf', [account]],
       [oracleAddress, 'getBestAnswer', [questionId]],
       [oracleAddress, 'getHistoryHash', [questionId]],
       [oracleAddress, 'isFinalized', [questionId]]
@@ -470,7 +471,7 @@ export default class Plugin {
     });
 
     const alreadyClaimed = BigNumber.from(historyHash).eq(0);
-    const address = web3.provider.selectedAddress.toLowerCase();
+    const address = account.toLowerCase();
 
     // Check if current user has submitted an answer
     const currentUserAnswers = users.map((user, i) => {
@@ -613,6 +614,7 @@ export default class Plugin {
     // fetch token attribute from Realitio contract, if it works, it means it is
     // a RealitioERC20, otherwise the catch will handle the currency as ETH
     try {
+      const account = (await web3.listAccounts())[0];
       const token = await call(web3, OracleAbi, [oracleAddress, 'token', []]);
       const [[tokenDecimals], [allowance]] = await multicall(
         network,
@@ -620,7 +622,7 @@ export default class Plugin {
         TokenAbi,
         [
           [token, 'decimals', []],
-          [token, 'allowance', [web3.provider.selectedAddress, oracleAddress]]
+          [token, 'allowance', [account, oracleAddress]]
         ]
       );
 
