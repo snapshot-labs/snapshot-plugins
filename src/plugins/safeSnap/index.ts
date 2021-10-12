@@ -364,19 +364,15 @@ export default class Plugin {
       moduleDetails.oracle,
       proposalDetails.questionId
     );
-    try {
-      return {
-        ...moduleDetails,
-        proposalId,
-        ...questionState,
-        ...proposalDetails,
-        transactions,
-        txHashes,
-        ...infoFromOracle
-      };
-    } catch (e) {
-      throw new Error(e);
-    }
+    return {
+      ...moduleDetails,
+      proposalId,
+      ...questionState,
+      ...proposalDetails,
+      transactions,
+      txHashes,
+      ...infoFromOracle
+    };
   }
 
   async getModuleDetails(network: string, moduleAddress: string) {
