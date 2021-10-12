@@ -555,7 +555,7 @@ export default class Plugin {
       transactions
     );
     const moduleTx = transactions[transactionIndex];
-    const tx = await sendTransaction(
+    return await sendTransaction(
       web3,
       moduleAddress,
       ModuleAbi,
@@ -570,8 +570,6 @@ export default class Plugin {
         transactionIndex
       ]
     );
-    const receipt = await tx.wait();
-    console.log('[DAO module] executed proposal:', receipt);
   }
 
   async voteForQuestion(
