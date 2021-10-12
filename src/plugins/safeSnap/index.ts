@@ -395,15 +395,13 @@ export default class Plugin {
       moduleAddress,
       transactions
     );
-    const tx = await sendTransaction(
+    return await sendTransaction(
       web3,
       moduleAddress,
       ModuleAbi,
       'addProposal',
       [proposalId, txHashes]
     );
-    const receipt = await tx.wait();
-    console.log('[DAO module] submitted proposal:', receipt);
   }
 
   async loadClaimBondData(
@@ -520,31 +518,28 @@ export default class Plugin {
       [questionId]
     ]);
 
-    if (BigNumber.from(currentHistoryHash).eq(0)) {
-      const tx = await sendTransaction(
+    let tx: any;
+    const multi = !BigNumber.from(currentHistoryHash).eq(0);
+
+    if (multi) {
+      tx = await sendTransaction(
+        web3,
+        oracleAddress,
+        OracleAbi,
+        'claimMultipleAndWithdrawBalance',
+        [[questionId], ...claimParams]
+      );
+    } else {
+      tx = await sendTransaction(
         web3,
         oracleAddress,
         OracleAbi,
         'withdraw',
         []
       );
-      const receipt = await tx.wait();
-      console.log('[Realitio] executed withdraw:', receipt);
-      return;
     }
 
-    const tx = await sendTransaction(
-      web3,
-      oracleAddress,
-      OracleAbi,
-      'claimMultipleAndWithdrawBalance',
-      [[questionId], ...claimParams]
-    );
-    const receipt = await tx.wait();
-    console.log(
-      '[Realitio] executed claimMultipleAndWithdrawBalance:',
-      receipt
-    );
+    return { tx, multi };
   }
 
   async executeProposal(
