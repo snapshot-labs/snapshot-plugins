@@ -2,7 +2,7 @@ name: Update Snapshot Submodule
 on:
   push:
     branches:
-      - master
+      - main
     paths:
       - 'src/**'
       - 'package*'
