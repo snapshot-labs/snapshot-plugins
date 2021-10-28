@@ -384,7 +384,7 @@ export default class Plugin {
     return getModuleDetails(provider, network, moduleAddress);
   }
 
-  async submitProposal(
+  async *submitProposal(
     web3: any,
     moduleAddress: string,
     proposalId: string,
@@ -402,6 +402,7 @@ export default class Plugin {
       'addProposal',
       [proposalId, txHashes]
     );
+    yield;
     const receipt = await tx.wait();
     console.log('[DAO module] submitted proposal:', receipt);
   }
@@ -508,7 +509,7 @@ export default class Plugin {
     };
   }
 
-  async claimBond(
+  async *claimBond(
     web3: any,
     oracleAddress: string,
     questionId: string,
@@ -528,6 +529,7 @@ export default class Plugin {
         'withdraw',
         []
       );
+      yield;
       const receipt = await tx.wait();
       console.log('[Realitio] executed withdraw:', receipt);
       return;
@@ -540,6 +542,7 @@ export default class Plugin {
       'claimMultipleAndWithdrawBalance',
       [[questionId], ...claimParams]
     );
+    yield;
     const receipt = await tx.wait();
     console.log(
       '[Realitio] executed claimMultipleAndWithdrawBalance:',
@@ -547,7 +550,7 @@ export default class Plugin {
     );
   }
 
-  async executeProposal(
+  async *executeProposal(
     web3: any,
     moduleAddress: string,
     proposalId: string,
@@ -575,11 +578,12 @@ export default class Plugin {
         transactionIndex
       ]
     );
+    yield;
     const receipt = await tx.wait();
     console.log('[DAO module] executed proposal:', receipt);
   }
 
-  async voteForQuestion(
+  async *voteForQuestion(
     network: string,
     web3: any,
     oracleAddress: string,
@@ -639,7 +643,10 @@ export default class Plugin {
           [oracleAddress, bond],
           {}
         );
-        await approveTx.wait();
+        yield 'erc20-approval';
+        const approvalReceipt = await approveTx.wait();
+        console.log('[DAO module] token transfer approved:', approvalReceipt);
+        yield;
       }
       parameters = [...parameters, bond, bond];
       methodName = 'submitAnswerERC20';
@@ -660,6 +667,7 @@ export default class Plugin {
       parameters,
       txOverrides
     );
+    yield;
     const receipt = await tx.wait();
     console.log('[DAO module] executed vote on oracle:', receipt);
   }
