@@ -290,7 +290,7 @@ export default class Plugin {
     );
   }
 
-  async calcTransactionHash(
+  calcTransactionHash(
     network: string,
     moduleAddress: string,
     transaction: ModuleTransaction
@@ -303,7 +303,7 @@ export default class Plugin {
     return _TypedDataEncoder.hash(domain, EIP712_TYPES, transaction);
   }
 
-  async calcTransactionHashes(
+  calcTransactionHashes(
     chainId: number,
     moduleAddress: string,
     transactions: ModuleTransaction[]
@@ -330,7 +330,7 @@ export default class Plugin {
   ): Promise<ProposalDetails> {
     const provider: StaticJsonRpcProvider = getProvider(network);
     const chainId = parseInt(network);
-    const txHashes = await this.calcTransactionHashes(
+    const txHashes = this.calcTransactionHashes(
       chainId,
       moduleAddress,
       transactions
@@ -388,7 +388,7 @@ export default class Plugin {
     proposalId: string,
     transactions: ModuleTransaction[]
   ) {
-    const txHashes = await this.calcTransactionHashes(
+    const txHashes = this.calcTransactionHashes(
       web3.network.chainId,
       moduleAddress,
       transactions
@@ -556,7 +556,7 @@ export default class Plugin {
     transactions: ModuleTransaction[],
     transactionIndex: number
   ) {
-    const txHashes = await this.calcTransactionHashes(
+    const txHashes = this.calcTransactionHashes(
       web3.network.chainId,
       moduleAddress,
       transactions
