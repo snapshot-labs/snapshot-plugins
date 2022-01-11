@@ -4,12 +4,12 @@
 
 #### Install dependencies
 ```bash
-npm install
+yarn
 ```
 
 #### Build package
 ```bash
-npm run build
+yarn build
 ```
 
 ### License
