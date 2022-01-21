@@ -4,10 +4,11 @@ import { isBigNumberish } from '@ethersproject/bignumber/lib/bignumber';
 import { isHexString } from '@ethersproject/bytes';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
-import { call, getProvider, multicall, sendTransaction } from '../../utils';
 import { _TypedDataEncoder } from '@ethersproject/hash';
 import { Contract } from '@ethersproject/contracts';
 import { Result } from '@ethersproject/abi';
+
+import { call, getProvider, multicall, sendTransaction } from '../../utils';
 import { ModuleTransaction, ProposalDetails } from './models';
 import {
   EIP712_TYPES,
@@ -19,15 +20,17 @@ import {
 import {
   buildQuestion,
   checkPossibleExecution,
-  getModuleDetails,
-  getProposalDetails
-} from './utils/realityModule';
-import { retrieveInfoFromOracle } from './utils/realityETH';
-import {
   createMultiSendTx,
+  getModuleDetails,
   getMultiSend,
-  MULTI_SEND_VERSION
-} from './utils/multiSend';
+  getProposalDetails,
+  MULTI_SEND_VERSION,
+  retrieveInfoFromOracle
+} from './utils';
+
+export * from './constants';
+export * from './models';
+export * from './utils';
 
 export default class Plugin {
   public author = 'Gnosis';
