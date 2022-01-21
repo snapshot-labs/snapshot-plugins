@@ -20,11 +20,8 @@ import {
 import {
   buildQuestion,
   checkPossibleExecution,
-  createMultiSendTx,
   getModuleDetails,
-  getMultiSend,
   getProposalDetails,
-  MULTI_SEND_VERSION,
   retrieveInfoFromOracle
 } from './utils';
 
