@@ -39,21 +39,6 @@ export default class Plugin {
   public website = 'https://safe.gnosis.io';
   public options: any;
 
-  static createMultiSendTx(
-    txs: ModuleTransaction[],
-    nonce: number,
-    multiSendAddress: string
-  ) {
-    return createMultiSendTx(txs, nonce, multiSendAddress);
-  }
-
-  static getMultiSend(
-    network: number | string,
-    version: MULTI_SEND_VERSION = MULTI_SEND_VERSION.V1_3_0
-  ) {
-    return getMultiSend(network, version);
-  }
-
   validateTransaction(transaction: ModuleTransaction) {
     const addressEmptyOrValidate =
       transaction.to === '' || isAddress(transaction.to);
