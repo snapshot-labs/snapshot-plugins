@@ -12,8 +12,6 @@
   "repository": "snapshot-labs/snapshot-plugins",
   "license": "MIT",
   "scripts": {
-    "build": "tsc -p .",
-    "prepublishOnly": "npm run build",
     "lint": "eslint . --ext .ts --fix"
   },
   "dependencies": {
