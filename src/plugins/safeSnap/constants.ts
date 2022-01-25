@@ -111,24 +111,7 @@ export const ERC721_ABI = [
 ];
 
 export const MULTI_SEND_ABI = [
-  {
-    inputs: [],
-    stateMutability: 'nonpayable',
-    type: 'constructor'
-  },
-  {
-    inputs: [
-      {
-        internalType: 'bytes',
-        name: 'transactions',
-        type: 'bytes'
-      }
-    ],
-    name: 'multiSend',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function'
-  }
+  'function multiSend(bytes transactions) payable'
 ];
 
 // MULTI SEND CONSTANTS
