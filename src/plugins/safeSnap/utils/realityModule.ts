@@ -1,6 +1,6 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { multicall } from '../../../utils';
-import { ModuleAbi, OracleAbi } from '../constants';
+import { REALITY_MODULE_ABI, ORACLE_ABI } from '../constants';
 import { HashZero } from '@ethersproject/constants';
 import { BigNumber } from '@ethersproject/bignumber';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
@@ -21,7 +21,7 @@ export const getProposalDetails = async (
     await multicall(
       network,
       provider,
-      ModuleAbi,
+      REALITY_MODULE_ABI,
       [[moduleAddress, 'questionIds', [questionHash]]].concat(
         txHashes.map((txHash) => [
           moduleAddress,
@@ -56,7 +56,7 @@ export const getModuleDetails = async (
   let moduleDetails;
   try {
     // Assume module is Reality Module
-    moduleDetails = await multicall(network, provider, ModuleAbi, [
+    moduleDetails = await multicall(network, provider, REALITY_MODULE_ABI, [
       [moduleAddress, 'avatar'],
       [moduleAddress, 'oracle'],
       [moduleAddress, 'questionCooldown'],
@@ -65,7 +65,7 @@ export const getModuleDetails = async (
   } catch (err) {
     // The Reality Module doesn't have an avatar field, causing tx to fails.
     // Assume module is Dao Module (old version)
-    moduleDetails = await multicall(network, provider, ModuleAbi, [
+    moduleDetails = await multicall(network, provider, REALITY_MODULE_ABI, [
       [moduleAddress, 'executor'],
       [moduleAddress, 'oracle'],
       [moduleAddress, 'questionCooldown'],
@@ -92,7 +92,7 @@ export const checkPossibleExecution = async (
 }> => {
   if (questionId) {
     try {
-      const result = await multicall(network, provider, OracleAbi, [
+      const result = await multicall(network, provider, ORACLE_ABI, [
         [oracleAddress, 'resultFor', [questionId]],
         [oracleAddress, 'getFinalizeTS', [questionId]]
       ]);

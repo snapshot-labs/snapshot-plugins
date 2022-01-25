@@ -1,33 +1,42 @@
+import { Result } from '@ethersproject/abi';
 import { isAddress } from '@ethersproject/address';
-import { BigNumber } from '@ethersproject/bignumber';
-import { isBigNumberish } from '@ethersproject/bignumber/lib/bignumber';
 import { isHexString } from '@ethersproject/bytes';
+import { Contract } from '@ethersproject/contracts';
+import { BigNumber } from '@ethersproject/bignumber';
+import { _TypedDataEncoder } from '@ethersproject/hash';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { keccak256 as solidityKeccak256 } from '@ethersproject/solidity';
-import { _TypedDataEncoder } from '@ethersproject/hash';
-import { Contract } from '@ethersproject/contracts';
-import { Result } from '@ethersproject/abi';
+import { isBigNumberish } from '@ethersproject/bignumber/lib/bignumber';
 
 import { call, getProvider, multicall, sendTransaction } from '../../utils';
 import { ModuleTransaction, ProposalDetails } from './models';
 import {
   EIP712_TYPES,
-  ModuleAbi,
-  OracleAbi,
+  REALITY_MODULE_ABI,
+  ORACLE_ABI,
   START_BLOCKS,
-  TokenAbi
+  ERC20_ABI
 } from './constants';
 import {
   buildQuestion,
   checkPossibleExecution,
   getModuleDetails,
-  getProposalDetails,
-  retrieveInfoFromOracle
-} from './utils';
+  getProposalDetails
+} from './utils/realityModule';
+import { retrieveInfoFromOracle } from './utils/realityETH';
 
 export * from './constants';
 export * from './models';
-export * from './utils';
+
+export * from './utils/abi';
+export * from './utils/safe';
+export * from './utils/coins';
+export * from './utils/index';
+export * from './utils/decoder';
+export * from './utils/multiSend';
+export * from './utils/realityETH';
+export * from './utils/transactions';
+export * from './utils/realityModule';
 
 export default class Plugin {
   public author = 'Gnosis';
@@ -153,7 +162,7 @@ export default class Plugin {
     const tx = await sendTransaction(
       web3,
       moduleAddress,
-      ModuleAbi,
+      REALITY_MODULE_ABI,
       'addProposal',
       [proposalId, txHashes]
     );
@@ -168,7 +177,7 @@ export default class Plugin {
     questionId: string,
     oracleAddress: string
   ) {
-    const contract = new Contract(oracleAddress, OracleAbi, web3);
+    const contract = new Contract(oracleAddress, ORACLE_ABI, web3);
     const provider: StaticJsonRpcProvider = getProvider(network);
     const account = (await web3.listAccounts())[0];
 
@@ -177,7 +186,7 @@ export default class Plugin {
       [bestAnswer],
       [historyHash],
       [isFinalized]
-    ] = await multicall(network, provider, OracleAbi, [
+    ] = await multicall(network, provider, ORACLE_ABI, [
       [oracleAddress, 'balanceOf', [account]],
       [oracleAddress, 'getBestAnswer', [questionId]],
       [oracleAddress, 'getHistoryHash', [questionId]],
@@ -188,7 +197,7 @@ export default class Plugin {
     let tokenDecimals = 18;
 
     try {
-      const token = await call(provider, OracleAbi, [
+      const token = await call(provider, ORACLE_ABI, [
         oracleAddress,
         'token',
         []
@@ -196,7 +205,7 @@ export default class Plugin {
       const [[symbol], [decimals]] = await multicall(
         network,
         provider,
-        TokenAbi,
+        ERC20_ABI,
         [
           [token, 'symbol', []],
           [token, 'decimals', []]
@@ -271,7 +280,7 @@ export default class Plugin {
     questionId: string,
     claimParams: [string[], string[], number[], string[]]
   ) {
-    const currentHistoryHash = await call(web3, OracleAbi, [
+    const currentHistoryHash = await call(web3, ORACLE_ABI, [
       oracleAddress,
       'getHistoryHash',
       [questionId]
@@ -281,7 +290,7 @@ export default class Plugin {
       const tx = await sendTransaction(
         web3,
         oracleAddress,
-        OracleAbi,
+        ORACLE_ABI,
         'withdraw',
         []
       );
@@ -294,7 +303,7 @@ export default class Plugin {
     const tx = await sendTransaction(
       web3,
       oracleAddress,
-      OracleAbi,
+      ORACLE_ABI,
       'claimMultipleAndWithdrawBalance',
       [[questionId], ...claimParams]
     );
@@ -322,7 +331,7 @@ export default class Plugin {
     const tx = await sendTransaction(
       web3,
       moduleAddress,
-      ModuleAbi,
+      REALITY_MODULE_ABI,
       'executeProposalWithIndex',
       [
         proposalId,
@@ -347,7 +356,7 @@ export default class Plugin {
     minimumBondInDaoModule: string,
     answer: '1' | '0'
   ) {
-    const currentBond = await call(web3, OracleAbi, [
+    const currentBond = await call(web3, ORACLE_ABI, [
       oracleAddress,
       'getBond',
       [questionId]
@@ -374,11 +383,11 @@ export default class Plugin {
     // a RealitioERC20, otherwise the catch will handle the currency as ETH
     try {
       const account = (await web3.listAccounts())[0];
-      const token = await call(web3, OracleAbi, [oracleAddress, 'token', []]);
+      const token = await call(web3, ORACLE_ABI, [oracleAddress, 'token', []]);
       const [[tokenDecimals], [allowance]] = await multicall(
         network,
         web3,
-        TokenAbi,
+        ERC20_ABI,
         [
           [token, 'decimals', []],
           [token, 'allowance', [account, oracleAddress]]
@@ -395,7 +404,7 @@ export default class Plugin {
         const approveTx = await sendTransaction(
           web3,
           token,
-          TokenAbi,
+          ERC20_ABI,
           'approve',
           [oracleAddress, bond],
           {}
@@ -419,7 +428,7 @@ export default class Plugin {
     const tx = await sendTransaction(
       web3,
       oracleAddress,
-      OracleAbi,
+      ORACLE_ABI,
       methodName,
       parameters,
       txOverrides
