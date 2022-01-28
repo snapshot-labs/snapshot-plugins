@@ -30,7 +30,8 @@ export function formatBatchTransaction(
   batch: ModuleTransaction[],
   nonce: number,
   multiSendAddress: string
-): ModuleTransaction {
+): ModuleTransaction | null {
+  if (!batch.every((x) => x)) return null;
   if (batch.length === 1) {
     return { ...batch[0], nonce: nonce.toString() };
   }
@@ -45,7 +46,9 @@ export function createBatch(
   multiSendAddress: string
 ) {
   const mainTransaction = formatBatchTransaction(txs, nonce, multiSendAddress);
-  const hash = getBatchHash(module, chainId, nonce, mainTransaction);
+  const hash = mainTransaction
+    ? getBatchHash(module, chainId, nonce, mainTransaction)
+    : null;
   return {
     hash,
     nonce,
@@ -101,12 +104,23 @@ export function coerceConfig(config, network) {
         const _network = safe.network || network;
         const multiSendAddress =
           safe.multiSendAddress || getMultiSend(_network);
-        const txs = (safe.txs || []).map((batch) => {
-          if (!batch.mainTransaction) {
-            const oldMultiSendAddress = getMultiSend(
+        const txs = (safe.txs || []).map((batch, nonce) => {
+          const oldMultiSendAddress = getMultiSend(
+            _network,
+            MULTI_SEND_VERSION.V1_1_1
+          );
+          if (Array.isArray(batch)) {
+            // Assume old config
+            return createBatch(
+              safe.realityAddress,
               _network,
-              MULTI_SEND_VERSION.V1_1_1
+              nonce,
+              batch,
+              oldMultiSendAddress
             );
+          }
+
+          if (!batch.mainTransaction) {
             return {
               ...batch,
               mainTransaction: formatBatchTransaction(
@@ -118,10 +132,14 @@ export function coerceConfig(config, network) {
           }
           return batch;
         });
-        return {
+        const sanitizedSafe = {
           ...safe,
           txs,
           multiSendAddress
+        };
+        return {
+          ...sanitizedSafe,
+          hash: sanitizedSafe.hash ?? getSafeHash(sanitizedSafe)
         };
       })
     };
