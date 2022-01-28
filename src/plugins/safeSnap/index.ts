@@ -88,30 +88,6 @@ export default class Plugin {
     });
   }
 
-  async getExecutionDetails(
-    network: string,
-    moduleAddress: string,
-    proposalId: string,
-    transactions: ModuleTransaction[]
-  ): Promise<ProposalDetails> {
-    const chainId = parseInt(network);
-    const txHashes = this.calcTransactionHashes(
-      chainId,
-      moduleAddress,
-      transactions
-    );
-    const details = await this.getExecutionDetailsWithHashes(
-      network,
-      moduleAddress,
-      proposalId,
-      txHashes
-    );
-    return {
-      ...details,
-      transactions
-    };
-  }
-
   async getExecutionDetailsWithHashes(
     network: string,
     moduleAddress: string,
@@ -159,28 +135,6 @@ export default class Plugin {
   async getModuleDetails(network: string, moduleAddress: string) {
     const provider: StaticJsonRpcProvider = getProvider(network);
     return getModuleDetails(provider, network, moduleAddress);
-  }
-
-  async *submitProposal(
-    web3: any,
-    moduleAddress: string,
-    proposalId: string,
-    transactions: ModuleTransaction[]
-  ) {
-    const txHashes = this.calcTransactionHashes(
-      web3.network.chainId,
-      moduleAddress,
-      transactions
-    );
-    const submit = this.submitProposalWithHashes(
-      web3,
-      moduleAddress,
-      proposalId,
-      txHashes
-    );
-    await submit.next();
-    yield;
-    await submit.next();
   }
 
   async *submitProposalWithHashes(
@@ -343,39 +297,6 @@ export default class Plugin {
       '[Realitio] executed claimMultipleAndWithdrawBalance:',
       receipt
     );
-  }
-
-  async *executeProposal(
-    web3: any,
-    moduleAddress: string,
-    proposalId: string,
-    transactions: ModuleTransaction[],
-    transactionIndex: number
-  ) {
-    const txHashes = this.calcTransactionHashes(
-      web3.network.chainId,
-      moduleAddress,
-      transactions
-    );
-    const moduleTx = transactions[transactionIndex];
-    const tx = await sendTransaction(
-      web3,
-      moduleAddress,
-      REALITY_MODULE_ABI,
-      'executeProposalWithIndex',
-      [
-        proposalId,
-        txHashes,
-        moduleTx.to,
-        moduleTx.value,
-        moduleTx.data || '0x',
-        moduleTx.operation,
-        transactionIndex
-      ]
-    );
-    yield;
-    const receipt = await tx.wait();
-    console.log('[DAO module] executed proposal:', receipt);
   }
 
   async *executeProposalWithHashes(
