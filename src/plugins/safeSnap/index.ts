@@ -94,13 +94,31 @@ export default class Plugin {
     proposalId: string,
     transactions: ModuleTransaction[]
   ): Promise<ProposalDetails> {
-    const provider: StaticJsonRpcProvider = getProvider(network);
     const chainId = parseInt(network);
     const txHashes = this.calcTransactionHashes(
       chainId,
       moduleAddress,
       transactions
     );
+    const details = await this.getExecutionDetailsWithHashes(
+      network,
+      moduleAddress,
+      proposalId,
+      txHashes
+    );
+    return {
+      ...details,
+      transactions
+    };
+  }
+
+  async getExecutionDetailsWithHashes(
+    network: string,
+    moduleAddress: string,
+    proposalId: string,
+    txHashes: string[]
+  ): Promise<Omit<ProposalDetails, 'transactions'>> {
+    const provider: StaticJsonRpcProvider = getProvider(network);
     const question = await buildQuestion(proposalId, txHashes);
     const questionHash = solidityKeccak256(['string'], [question]);
 
@@ -128,19 +146,14 @@ export default class Plugin {
       moduleDetails.oracle,
       proposalDetails.questionId
     );
-    try {
-      return {
-        ...moduleDetails,
-        proposalId,
-        ...questionState,
-        ...proposalDetails,
-        transactions,
-        txHashes,
-        ...infoFromOracle
-      };
-    } catch (e) {
-      throw new Error(e);
-    }
+    return {
+      ...moduleDetails,
+      proposalId,
+      ...questionState,
+      ...proposalDetails,
+      txHashes,
+      ...infoFromOracle
+    };
   }
 
   async getModuleDetails(network: string, moduleAddress: string) {
@@ -159,6 +172,23 @@ export default class Plugin {
       moduleAddress,
       transactions
     );
+    const submit = this.submitProposalWithHashes(
+      web3,
+      moduleAddress,
+      proposalId,
+      txHashes
+    );
+    await submit.next();
+    yield;
+    await submit.next();
+  }
+
+  async *submitProposalWithHashes(
+    web3: any,
+    moduleAddress: string,
+    proposalId: string,
+    txHashes: string[]
+  ) {
     const tx = await sendTransaction(
       web3,
       moduleAddress,
@@ -328,6 +358,34 @@ export default class Plugin {
       transactions
     );
     const moduleTx = transactions[transactionIndex];
+    const tx = await sendTransaction(
+      web3,
+      moduleAddress,
+      REALITY_MODULE_ABI,
+      'executeProposalWithIndex',
+      [
+        proposalId,
+        txHashes,
+        moduleTx.to,
+        moduleTx.value,
+        moduleTx.data || '0x',
+        moduleTx.operation,
+        transactionIndex
+      ]
+    );
+    yield;
+    const receipt = await tx.wait();
+    console.log('[DAO module] executed proposal:', receipt);
+  }
+
+  async *executeProposalWithHashes(
+    web3: any,
+    moduleAddress: string,
+    proposalId: string,
+    txHashes: string[],
+    moduleTx: ModuleTransaction,
+    transactionIndex: number
+  ) {
     const tx = await sendTransaction(
       web3,
       moduleAddress,
