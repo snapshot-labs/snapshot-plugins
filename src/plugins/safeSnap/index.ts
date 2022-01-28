@@ -88,19 +88,13 @@ export default class Plugin {
     });
   }
 
-  async getExecutionDetails(
+  async getExecutionDetailsWithHashes(
     network: string,
     moduleAddress: string,
     proposalId: string,
-    transactions: ModuleTransaction[]
-  ): Promise<ProposalDetails> {
+    txHashes: string[]
+  ): Promise<Omit<ProposalDetails, 'transactions'>> {
     const provider: StaticJsonRpcProvider = getProvider(network);
-    const chainId = parseInt(network);
-    const txHashes = this.calcTransactionHashes(
-      chainId,
-      moduleAddress,
-      transactions
-    );
     const question = await buildQuestion(proposalId, txHashes);
     const questionHash = solidityKeccak256(['string'], [question]);
 
@@ -128,19 +122,14 @@ export default class Plugin {
       moduleDetails.oracle,
       proposalDetails.questionId
     );
-    try {
-      return {
-        ...moduleDetails,
-        proposalId,
-        ...questionState,
-        ...proposalDetails,
-        transactions,
-        txHashes,
-        ...infoFromOracle
-      };
-    } catch (e) {
-      throw new Error(e);
-    }
+    return {
+      ...moduleDetails,
+      proposalId,
+      ...questionState,
+      ...proposalDetails,
+      txHashes,
+      ...infoFromOracle
+    };
   }
 
   async getModuleDetails(network: string, moduleAddress: string) {
@@ -148,17 +137,12 @@ export default class Plugin {
     return getModuleDetails(provider, network, moduleAddress);
   }
 
-  async *submitProposal(
+  async *submitProposalWithHashes(
     web3: any,
     moduleAddress: string,
     proposalId: string,
-    transactions: ModuleTransaction[]
+    txHashes: string[]
   ) {
-    const txHashes = this.calcTransactionHashes(
-      web3.network.chainId,
-      moduleAddress,
-      transactions
-    );
     const tx = await sendTransaction(
       web3,
       moduleAddress,
@@ -315,19 +299,14 @@ export default class Plugin {
     );
   }
 
-  async *executeProposal(
+  async *executeProposalWithHashes(
     web3: any,
     moduleAddress: string,
     proposalId: string,
-    transactions: ModuleTransaction[],
+    txHashes: string[],
+    moduleTx: ModuleTransaction,
     transactionIndex: number
   ) {
-    const txHashes = this.calcTransactionHashes(
-      web3.network.chainId,
-      moduleAddress,
-      transactions
-    );
-    const moduleTx = transactions[transactionIndex];
     const tx = await sendTransaction(
       web3,
       moduleAddress,

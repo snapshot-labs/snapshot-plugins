@@ -3,7 +3,7 @@ import { JsonRpcProvider } from '@ethersproject/providers';
 import { keccak256 } from '@ethersproject/solidity';
 import memoize from 'lodash/memoize';
 
-import SafeSnapPlugin from '../index';
+import SafeSnapPlugin, { MULTI_SEND_VERSION } from '../index';
 import { createMultiSendTx, getMultiSend } from './multiSend';
 import { ModuleTransaction, SafeData } from '../models';
 import { getProvider } from '../../../utils';
@@ -44,9 +44,12 @@ export function createBatch(
   txs: ModuleTransaction[],
   multiSendAddress: string
 ) {
+  const mainTransaction = formatBatchTransaction(txs, nonce, multiSendAddress);
+  const hash = getBatchHash(module, chainId, nonce, mainTransaction);
   return {
+    hash,
     nonce,
-    hash: getBatchHash(module, chainId, nonce, txs, multiSendAddress),
+    mainTransaction,
     transactions: txs
   };
 }
@@ -55,15 +58,12 @@ export function getBatchHash(
   module: string,
   chainId: number,
   nonce: number,
-  txs: ModuleTransaction[],
-  multiSendAddress: string
+  transaction: ModuleTransaction
 ) {
-  const valid = txs.every((tx) => tx);
-  if (!valid || !txs.length) return null;
   try {
     const safeSnap = new SafeSnapPlugin();
     const hashes = safeSnap.calcTransactionHashes(chainId, module, [
-      formatBatchTransaction(txs, nonce, multiSendAddress)
+      transaction
     ]);
     return hashes[0];
   } catch (err) {
@@ -97,11 +97,33 @@ export function coerceConfig(config, network) {
   if (config.safes) {
     return {
       ...config,
-      safes: config.safes.map((safe) => ({
-        ...safe,
-        multiSendAddress:
-          safe.multiSendAddress || getMultiSend(safe.network || network)
-      }))
+      safes: config.safes.map((safe) => {
+        const _network = safe.network || network;
+        const multiSendAddress =
+          safe.multiSendAddress || getMultiSend(_network);
+        const txs = (safe.txs || []).map((batch) => {
+          if (!batch.mainTransaction) {
+            const oldMultiSendAddress = getMultiSend(
+              _network,
+              MULTI_SEND_VERSION.V1_1_1
+            );
+            return {
+              ...batch,
+              mainTransaction: formatBatchTransaction(
+                batch.transactions,
+                batch.nonce,
+                oldMultiSendAddress
+              )
+            };
+          }
+          return batch;
+        });
+        return {
+          ...safe,
+          txs,
+          multiSendAddress
+        };
+      })
     };
   }
 
@@ -111,7 +133,7 @@ export function coerceConfig(config, network) {
       {
         network,
         realityAddress: config.address,
-        multiSendAddress: getMultiSend(network)
+        multiSendAddress: getMultiSend(network, MULTI_SEND_VERSION.V1_1_1)
       }
     ]
   };
