@@ -11,6 +11,10 @@ import { ERC20_ABI, ERC721_ABI, EXPLORER_API_URLS } from '../constants';
 import { ABI } from '../models';
 import { mustBeEthereumAddress, mustBeEthereumContractAddress } from './index';
 
+export function isArrayParameter(parameter: string): boolean {
+  return ['tuple', 'array'].includes(parameter);
+}
+
 const fetchContractABI = memoize(
   async (url: string, contractAddress: string) => {
     const params = new URLSearchParams({
@@ -90,7 +94,7 @@ export function getABIWriteFunctions(abi: Fragment[]) {
 function extractMethodArgs(values: string[]) {
   return (param: ParamType, index) => {
     const value = values[index];
-    if (param.baseType === 'array') {
+    if (isArrayParameter(param.baseType)) {
       return JSON.parse(value);
     }
     return value;
