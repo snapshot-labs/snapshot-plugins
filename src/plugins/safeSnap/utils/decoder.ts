@@ -4,6 +4,7 @@ import {
   Fragment,
   JsonFragment
 } from '@ethersproject/abi';
+import { isArrayParameter } from './abi';
 
 export class InterfaceDecoder extends Interface {
   public decodeFunction(
@@ -44,7 +45,7 @@ export class InterfaceDecoder extends Interface {
   }
 
   private formatParameter(parameter, value, deep = 0): string {
-    if (parameter.baseType === 'array') {
+    if (isArrayParameter(parameter.baseType)) {
       return this.formatArrayValue(parameter.arrayChildren, value, deep);
     }
     return this.formatValue(parameter.type, value);
