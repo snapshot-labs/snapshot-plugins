@@ -105,10 +105,9 @@ export function coerceConfig(config, network) {
         const multiSendAddress =
           safe.multiSendAddress || getMultiSend(_network);
         const txs = (safe.txs || []).map((batch, nonce) => {
-          const oldMultiSendAddress = getMultiSend(
-            _network,
-            MULTI_SEND_VERSION.V1_1_1
-          );
+          const oldMultiSendAddress =
+            safe.multiSendAddress ||
+            getMultiSend(_network, MULTI_SEND_VERSION.V1_1_1);
           if (Array.isArray(batch)) {
             // Assume old config
             return createBatch(
